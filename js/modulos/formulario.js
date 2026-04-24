@@ -98,7 +98,13 @@ const Formulario = (() => {
             ),
             new Validacao(() => {
                     const tamanhoDocumento = campos["documento"].cleanVal().length;
-                    return tamanhoDocumento > 11 && Utilitario.obterEtapa() !== "aprovacaoInicial";
+                    // Considerar CEP como parâmetro para verificar se as informações estão completas ou não
+                    // Se não vier preenchido, os campos serão desbloqueados (cenário catastrófico)
+                    const cep = campos["cep"].val();
+
+                    return tamanhoDocumento > 11
+                        && Utilitario.obterEtapa() !== "aprovacaoInicial"
+                        && cep !== null && cep !== "";
                 },
                 null,
                 [campos["documento"]],
@@ -651,16 +657,17 @@ const Formulario = (() => {
         function obterDados(dadosCnpj, apiOrigem) {
             if (apiOrigem === "cnpjWs") {
                 razaoSocial = dadosCnpj["razao_social"];
-                nomeFantasia = dadosCnpj["estabelecimento"]["nome_fantasia"] ?? "";
-                cep = dadosCnpj["estabelecimento"]["cep"];
-                estado = dadosCnpj["estabelecimento"]["estado"]["sigla"];
-                cidade = dadosCnpj["estabelecimento"]["cidade"]["nome"];
+                nomeFantasia = dadosCnpj["estabelecimento"]["nome_fantasia"];
+                nomeFantasia = nomeFantasia ? nomeFantasia : razaoSocial;
+                cep = dadosCnpj["estabelecimento"]["cep"] ?? "";
+                estado = dadosCnpj["estabelecimento"]["estado"]?.["sigla"];
+                cidade = dadosCnpj["estabelecimento"]["cidade"]?.["nome"] ?? "";
                 tipoLogradouro = dadosCnpj["estabelecimento"]["tipo_logradouro"] ?? "";
-                logradouro = (tipoLogradouro !== "" ? (tipoLogradouro + " ") : "") + dadosCnpj["estabelecimento"]["logradouro"];
+                logradouro = (tipoLogradouro !== "" ? (tipoLogradouro + " ") : "") + (dadosCnpj["estabelecimento"]["logradouro"] ?? "");
                 numero = dadosCnpj["estabelecimento"]["numero"];
                 bairro = dadosCnpj["estabelecimento"]["bairro"];
                 complemento = (dadosCnpj["estabelecimento"]["complemento"] ?? "").replace(/\s\s+/g, " ");
-                email = dadosCnpj["estabelecimento"]["email"];
+                email = dadosCnpj["estabelecimento"]["email"] ?? "";
                 ddd1 = dadosCnpj["estabelecimento"]["ddd1"] ?? "";
                 telefone1 = dadosCnpj["estabelecimento"]["telefone1"] ?? "";
                 telefone = ddd1 + telefone1;
@@ -670,7 +677,8 @@ const Formulario = (() => {
             }
             else if (apiOrigem === "speedio") {
                 razaoSocial = dadosCnpj["RAZAO SOCIAL"];
-                nomeFantasia = dadosCnpj["NOME FANTASIA"] ?? "";
+                nomeFantasia = dadosCnpj["NOME FANTASIA"];
+                nomeFantasia = nomeFantasia ? nomeFantasia : razaoSocial;
                 cep = dadosCnpj["CEP"];
                 estado = dadosCnpj["UF"];
                 cidade = dadosCnpj["MUNICIPIO"];
@@ -691,7 +699,6 @@ const Formulario = (() => {
         }
 
         function salvarDadosCnpj() {
-            campoDocumento.campo.trigger("change");
             campoRazaoSocial.val(razaoSocial);
             campoNomeFantasia.val(nomeFantasia);
             campoCep.val(cep);
@@ -708,6 +715,8 @@ const Formulario = (() => {
                 campoContatoAdicional.configurarMascara("(00) 0000-00009");
                 campoContatoAdicional.val(telefoneAdicional);
             }
+
+            campoDocumento.campo.trigger("change");
         }
 
         function limparCampos() {
