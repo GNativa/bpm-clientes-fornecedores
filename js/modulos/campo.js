@@ -43,7 +43,19 @@ const tipoParaElemento = {
     - Representação abstrata de um campo no formulário.
  */
 class Campo {
-    constructor(id, rotulo, tipo, largura, dica, altura, listaFiltro, propriedadesAdicionais) {
+    constructor(
+        id,
+        rotulo,
+        tipo,
+        largura,
+        dica = null,
+        altura = null,
+        listaFiltro = null,
+        propriedadesAdicionais = {},
+        outrosParametros = {
+            mensagem: '',
+        },
+    ) {
         if (document.getElementById(id) !== null) {
             throw Error(`Já existe um campo com o id "${id}".`);
         }
@@ -98,6 +110,15 @@ class Campo {
         this.campo = this.configurarElementoHtml();
         this.definirVisibilidade(true);
         this.definirEdicao(true);
+
+        if (outrosParametros.mensagem) {
+            const div = document.createElement('div');
+            div.classList.add('mt-1');
+            const elementoMensagem = document.createElement('p');
+            elementoMensagem.innerHTML = outrosParametros.mensagem;
+            div.appendChild(elementoMensagem);
+            this.coluna.appendChild(div);
+        }
     }
 
     // configurarElementoHtml(): void

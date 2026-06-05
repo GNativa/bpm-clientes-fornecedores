@@ -5,6 +5,7 @@
 
 const Formulario = (() => {
     // Variáveis para uso em validações, consultas, etc.
+    /** @type {Record<string, Campo>} */
     let campos = {};
 
     let cnpjInaptoCadastro = false, cnpjInaptoTitular = false,
@@ -22,7 +23,7 @@ const Formulario = (() => {
     const camposObrigatorios = {
         "solicitacao": ["razaoSocial", "nomeFantasia", "ramoAtividade", "cep", "pais", "estado", "cidade", "logradouro",
             "numero", "bairro", "formaPagamento"],
-        "aprovacaoInicial": ["observacoesAprovacao", "nomeFantasia"],
+        "aprovacaoInicial": ["observacoesAprovacao", "nomeFantasia", "calcularSenar"],
         "execucao": [],
         "aprovacaoFinanceiro": ["observacoesAprovacao"],
         "revisao": ["razaoSocial", "nomeFantasia", "ramoAtividade", "cep", "estado", "cidade", "logradouro", "numero", "bairro",
@@ -32,24 +33,29 @@ const Formulario = (() => {
     const camposBloqueados = {
         "solicitacao": [],
         "aprovacaoInicial": ["cadastroComRestricao", "razaoSocial", "mercadoExterior", "fornecedorIndustria",
-            "ramoAtividade", "nomeContato", "emailAdicional", "celular", "contatoAdicional", "formaPagamento", "banco", "agenciaDigito",
-            "contaDigito", "tipoConta", "documentoConta", "titularConta", "favNomeFantasia", "favEmail", "favTelefone", "observacoes", "documentosPessoaFisica", "comprovanteEndereco",
-            "comprovanteContaBancaria", "retornoRegra"],
+            "ramoAtividade", "nomeContato", "emailAdicional", "celular", "contatoAdicional", "formaPagamento", "banco",
+            "agenciaDigito",  "contaDigito", "tipoConta", "documentoConta", "titularConta", "favNomeFantasia", "favEmail",
+            "favTelefone", "observacoes", "documentosPessoaFisica", "comprovanteEndereco", "comprovanteContaBancaria",
+            "retornoRegra",
+        ],
         "execucao": [],
-        "aprovacaoFinanceiro": ["documento", "cadastroComRestricao", "razaoSocial", "nomeFantasia", "mercadoExterior", "fornecedorIndustria",
-            "ramoAtividade", "inscricaoEstadual", "cep", "pais", "estado", "cidade", "logradouro", "numero", "bairro", "complemento", "enderecoCorresp",
-            "nomeContato", "emailContato", "emailAdicional", "telefone", "celular", "contatoAdicional", "formaPagamento",
-            "documentoConta", "titularConta", "favNomeFantasia", "favCep", "favEstado", "favCidade", "favLogradouro",
-            "favBairro", "favNumero", "favComplemento", "favEmail", "favTelefone", "observacoes", "documentosPessoaFisica", "comprovanteEndereco", "retornoRegra"],
+        "aprovacaoFinanceiro": ["documento", "cadastroComRestricao", "razaoSocial", "nomeFantasia", "mercadoExterior",
+            "fornecedorIndustria", "ramoAtividade", "inscricaoEstadual", "cep", "pais", "estado", "cidade", "logradouro",
+            "numero", "bairro", "complemento", "enderecoCorresp", "nomeContato", "emailContato", "emailAdicional",
+            "telefone", "celular", "contatoAdicional", "formaPagamento", "documentoConta", "titularConta",
+            "favNomeFantasia", "favCep", "favEstado", "favCidade", "favLogradouro", "favBairro", "favNumero",
+            "favComplemento", "favEmail", "favTelefone", "observacoes", "documentosPessoaFisica", "comprovanteEndereco",
+            "retornoRegra",
+        ],
         "revisao": ["observacoesAprovacao"]
     };
 
     const camposOcultos = {
-        "solicitacao": ["observacoesAprovacao", "retornoRegra", "nomeUsuario"],
+        "solicitacao": ["calcularSenar", "observacoesAprovacao", "retornoRegra", "nomeUsuario"],
         "aprovacaoInicial": ["retornoRegra", "nomeUsuario"],
         "execucao": [],
-        "aprovacaoFinanceiro": ["retornoRegra", "nomeUsuario"],
-        "revisao": ["retornoRegra", "nomeUsuario"]
+        "aprovacaoFinanceiro": ["calcularSenar", "retornoRegra", "nomeUsuario"],
+        "revisao": ["calcularSenar", "retornoRegra", "nomeUsuario"]
     };
 
     const fontes = {
@@ -289,6 +295,8 @@ const Formulario = (() => {
         campos["celular"].val(mapa.get("celular") || "");
         campos["contatoAdicional"].val(mapa.get("contatoAdicional") || "");
         campos["formaPagamento"].val(mapa.get("formaPagamento") || "");
+        campos["calcularSenar"].val(mapa.get("calcularSenar") || "");
+
         campos["banco"].val(mapa.get("banco") || "");
         campos["agenciaDigito"].val(mapa.get("agenciaDigito") || "");
         campos["contaDigito"].val(mapa.get("contaDigito") || "");
@@ -355,6 +363,8 @@ const Formulario = (() => {
         dados.celular = campos["celular"].cleanVal();
         dados.contatoAdicional = campos["contatoAdicional"].cleanVal();
         dados.formaPagamento = campos["formaPagamento"].val();
+        dados.calcularSenar = campos["calcularSenar"].val();
+
         dados.banco = campos["banco"].val();
         dados.agenciaDigito = campos["agenciaDigito"].val();
         dados.contaDigito = campos["contaDigito"].val();
@@ -1162,6 +1172,14 @@ const Formulario = (() => {
                     new OpcaoLista("7", "7 - Cartão de crédito"),
                     new OpcaoLista("8", "8 - Cheque"),
                 ]),
+            new Campo("calcularSenar", "Calcular Senar", "lista", 4, null, null, null, null, {
+                mensagem: '<strong>Atenção:</strong> Verifique se a operação corresponde à venda de commodities. Caso '
+                + 'afirmativo, selecione a opção <strong>"Sim"</strong>.',
+            })
+                .adicionarOpcoes([
+                    new OpcaoLista("S", "S - Sim"),
+                    new OpcaoLista("N", "N - Não"),
+                ]),
         ];
 
         salvarCampos(camposDadosPrincipais);
@@ -1221,7 +1239,7 @@ const Formulario = (() => {
                 "Retorno da regra de integração do ERP que fará o cadastro no sistema.", 5
             ),
             new Campo(
-                "nomeUsuario", "Usuário solicitante", "texto", "2"
+                "nomeUsuario", "Usuário solicitante", "texto", "2",
             ),
         ];
 
